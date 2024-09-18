@@ -6,7 +6,7 @@ public class ThisAntHandler : MonoBehaviour
 {
     //References
     Resources resources;
-    [SerializeField] GameObject GameManagerObject;
+    [SerializeField] private GameObject GameManagerObject;
 
     //LineData
     //public List<GameObject> myLine = new List<GameObject>();

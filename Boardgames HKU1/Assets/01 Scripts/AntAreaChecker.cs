@@ -15,7 +15,7 @@ public class AntAreaChecker : MonoBehaviour
     {
         if (collision.gameObject.tag == "Food")
         {
-            Debug.Log("I SEE FOOD!!");
+            //Debug.Log("I SEE FOOD!!");
             myHandler.hasFoodNearby = true;
             myHandler.activeContainer = collision.gameObject.GetComponent<FoodContainer>();
         }

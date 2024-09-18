@@ -1,17 +1,21 @@
 using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class SpiderBehaviour : MonoBehaviour
 {
     public NavMeshAgent myAgent;
-
+    public Transform myHole;
+    public GameObject targetAnt = null;
+    public GameObject caughtAnt;
+    [SerializeField] GameObject fakeAnt;
+    [SerializeField] Transform fangPositionForAnt;
+    GameObject currentFakeAnt = null;
     public enum SpiderStatesEnum
     {
         Roaming,
-        Attacking
+        Attacking,
+        Dragging
     }
 
     public SpiderStatesEnum activestate;
@@ -37,6 +41,9 @@ public class SpiderBehaviour : MonoBehaviour
             case SpiderStatesEnum.Attacking:
                 AttackingBehaviour();
                 break;
+            case SpiderStatesEnum.Dragging:
+                DraggingBehaviour();
+                break;
         }
     }
 
@@ -50,7 +57,7 @@ public class SpiderBehaviour : MonoBehaviour
         float maxRange = 10;
         float minRange = 1;
 
-        if(!hasDestination && !hasTarget)
+        if (!hasDestination && !hasTarget)
         {
             StartCoroutine(GoToRoamSpot(minRange, maxRange));
         }
@@ -63,16 +70,61 @@ public class SpiderBehaviour : MonoBehaviour
 
     private void AttackingBehaviour()
     {
+            targetLoc = targetAnt.transform.position;
         if (hasTarget && targetLoc != transform.position)// target is not where i am
         {
             if (Vector3.Distance(transform.position, targetLoc) > 0.5f)
             {
                 myAgent.SetDestination(targetLoc);
             }
+
+            if (Vector3.Distance(transform.position, targetLoc) < 1f)
+            {
+                Debug.Log("Ant is hella close to me imma eat");
+                //Incapacitate ant
+                if (targetAnt != null)
+                {
+                    //Re gets target position
+                        //GetTarget(targetAnt); mehhhh
+
+                    caughtAnt = targetAnt;
+                    //Disables caughtAnt
+                    caughtAnt.SetActive(false);
+                    targetAnt = null;
+                    caughtAnt = null;
+                    //Make a fake ant in fangs
+                    currentFakeAnt = Instantiate(fakeAnt, fangPositionForAnt.transform);
+                    hasTarget = false;
+                    //go dragg fakeant to hole
+                    activestate = SpiderStatesEnum.Dragging;
+                    return;
+                }
+            }
         }
         if (!hasTarget) activestate = SpiderStatesEnum.Roaming;
     }
 
+    private void DraggingBehaviour()
+    {
+        if(Vector3.Distance(transform.position, myHole.position) > 0.5f)
+        {
+            if(myAgent.destination != myHole.position)
+            {
+                myAgent.SetDestination(myHole.position);
+            }
+        }
+        else if (Vector3.Distance(transform.position, myHole.position) < 0.4f)
+        {
+            //Destroy fakeAnt
+            Destroy(currentFakeAnt);
+            currentFakeAnt = null;
+            //Reset targets and all
+            hasDestination = false;
+            RemoveTarget();
+
+            activestate = SpiderStatesEnum.Roaming;
+        }
+    }
     #endregion
 
     private Vector3 PickRandomDirection(float min, float max)
@@ -124,12 +176,14 @@ public class SpiderBehaviour : MonoBehaviour
     {
         hasTarget = true;
         targetLoc = target.transform.position;
+        targetAnt = target;
     }
 
     public void RemoveTarget()
     {
         hasTarget = false;
         targetLoc = transform.position;
+        targetAnt = null;
     }
     #endregion
 }

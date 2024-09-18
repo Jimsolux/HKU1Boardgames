@@ -11,6 +11,7 @@ TagManager:
   - Hole
   - OtherAnt
   - Enemy
+  - SpiderHole
   layers:
   - Default
   - TransparentFX

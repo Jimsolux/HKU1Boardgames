@@ -1,4 +1,3 @@
-using FischlWorks_FogWar;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,7 +58,7 @@ public class AntManager : MonoBehaviour
     public float maxHoleDistance = 4;
     public void CheckAntsNearHole()// Every second, also starts the checks for all the ants in the line.
     {
-        Debug.Log("CheckAntsNearHole every second.");
+        //Debug.Log("CheckAntsNearHole every second.");
         foreach (GameObject ant in antsInScene)
         {
 
@@ -108,7 +107,42 @@ public class AntManager : MonoBehaviour
         }
     }
 
+    #region DrawLines
 
+    List<Transform> lineLocations;
+
+    [SerializeField] private LineController lineController;
+    private void UpdateAntLineRenderer(int lineIndex)
+    {
+        lineLocations = new List<Transform>();  // Makes the list new and empty
+        lineLocations.Clear();
+        List<GameObject> activeLine = new List<GameObject>();
+        switch (lineIndex)
+        {
+            case 0: activeLine = lineList1; break;
+            case 1: activeLine = lineList2; break;
+            case 2: activeLine = lineList3; break;
+            case 3: activeLine = lineList4; break;
+            case 4: activeLine = lineList5; break;
+        }
+        int i = 0;
+        foreach (GameObject ant in activeLine)
+        {
+            lineLocations.Add(ant.transform);
+        }
+    }
+
+    private void SendPointsToLineRenderer(List<Transform> list)
+    {
+        if (lineController != null)
+        {
+            // Convert List<Transform> to Transform[]
+            Transform[] pointsArray = list.ToArray();
+
+            lineController.SetUpLine(pointsArray);
+        }
+    }
+    #endregion
     public void AllAntsInLineLookARound(int index)
     {
         List<GameObject> activeLine = new List<GameObject>();// Active LineList
@@ -120,12 +154,15 @@ public class AntManager : MonoBehaviour
             case 3: activeLine = lineList4; break;
             case 4: activeLine = lineList5; break;
         }
-        foreach (GameObject ant in activeLine)
+        if (activeLine.Count > 0)
         {
-            ThisAntHandler tah = ant.GetComponent<ThisAntHandler>();
-            if (tah != null && tah.myLineIndex != -1)
+            foreach (GameObject ant in activeLine)
             {
-                tah.CheckAntDistance(index);
+                ThisAntHandler tah = ant.GetComponent<ThisAntHandler>();
+                if (tah != null && tah.myLineIndex != -1)
+                {
+                    tah.CheckAntDistance(index);
+                }
             }
         }
     }
@@ -164,10 +201,10 @@ public class AntManager : MonoBehaviour
     {
         while (true)
         {
-        antsInScene = GameObject.FindGameObjectsWithTag("Ant");
-        Debug.Log("------ Checking scene for Ants -----");
+            antsInScene = GameObject.FindGameObjectsWithTag("Ant");
+            Debug.Log("------ Checking scene for Ants -----");
 
-        yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(1);
         }
     }
 
@@ -283,7 +320,7 @@ public class AntManager : MonoBehaviour
     #endregion
 
 
-
+    #region Adding ants to list
     public void AddFirstAntToList(GameObject ant, int listIndex)    // Sets the first ant to the first slot in the list.
     {
         List<GameObject> theRightList;
@@ -342,7 +379,7 @@ public class AntManager : MonoBehaviour
 
     }
 
-
+    #endregion
 
     #region signalling we can get food
     private void GrabFoodSignal()
@@ -384,7 +421,7 @@ public class AntManager : MonoBehaviour
         if (allLines[listIndex].Contains(ant))
         {
             lineList1.Remove(ant);
-            ThisAntHandler thisAntHandler = ant.GetComponent<ThisAntHandler> ();
+            ThisAntHandler thisAntHandler = ant.GetComponent<ThisAntHandler>();
             thisAntHandler.DestroyLineData();
             thisAntHandler.SetInLine(false);
         }
