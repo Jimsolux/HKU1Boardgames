@@ -7,9 +7,13 @@ public class Resources : MonoBehaviour
 {
 
     [SerializeField] private TextMeshProUGUI foodAmountBox;
+    [SerializeField] private AudioSource gainFoodAudio;
 
     public int food;
-
+    private void Awake()
+    {
+        UpdateFoodUI();
+    }
     private void UpdateFoodUI()
     {
         foodAmountBox.text = food.ToString();
@@ -17,6 +21,7 @@ public class Resources : MonoBehaviour
 
     public void GainFood(int amount)
     {
+        gainFoodAudio.Play();
         food += amount;
         UpdateFoodUI();
     }

@@ -79,10 +79,10 @@ public class CameraMovement : MonoBehaviour
         Vector3 midPointScreen = new Vector3(Screen.width /2, Screen.height /2, 0 );
 
         // Check if mouse position is near the screen borders
-        bool nearLeftBorder = mousePosition.x < borderThickness;
-        bool nearRightBorder = mousePosition.x > Screen.width - borderThickness;
-        bool nearTopBorder = mousePosition.y > Screen.height - borderThickness;
-        bool nearBottomBorder = mousePosition.y < borderThickness;
+        bool nearLeftBorder = mousePosition.x < borderThickness && mousePosition.x > -borderThickness;
+        bool nearRightBorder = mousePosition.x > Screen.width - borderThickness && mousePosition.x < Screen.width + borderThickness;
+        bool nearTopBorder = mousePosition.y > Screen.height - borderThickness && mousePosition.y < Screen.height + borderThickness;
+        bool nearBottomBorder = mousePosition.y < borderThickness && mousePosition.y > -borderThickness;
 
         // Check if mouse is near any border to allow panning
         if (nearLeftBorder || nearRightBorder || nearTopBorder || nearBottomBorder)

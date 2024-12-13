@@ -4,6 +4,7 @@ using System.Linq;
 
 
 
+
 //using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -29,12 +30,10 @@ public class AntManager : MonoBehaviour
     //- make the ant look for more ants to add to the list
     // This all so that the ants can form a line by being nearby eachother.
 
-    //This script still needs to be expanded so that there can be multiple ants in the area that will create multiple lines..
-    //Now it will only add them to one list.
 
     private void Awake()
     {
-        FillAntLinesList();// Fills the ants
+        FillAntLinesList();// Fills the ants lists[]
     }
     private void FillAntLinesList()
     {
@@ -50,8 +49,13 @@ public class AntManager : MonoBehaviour
         StartCoroutine(CheckSceneForAnts());
         InvokeRepeating("CheckAntsNearHole", 0, 0.2f);
         InvokeRepeating("GrabFoodSignal", 3, 1);
+        //InvokeRepeating("DrawDebugLines", 0, 1);
     }
 
+    private void FixedUpdate()
+    {
+        DrawDebugLines();
+    }
 
     #region AreaCheckForAnts
 
@@ -82,28 +86,59 @@ public class AntManager : MonoBehaviour
             }
 
 
-            else if (distance >= maxHoleDistance && thisAntHandler != null) // SITUATION: Ant from my line TOO FAR AWAY!
+            //else if (distance >= maxHoleDistance && thisAntHandler != null) // SITUATION: Ant from my line TOO FAR AWAY!
+            //{
+            //    List<GameObject> activeLine = new List<GameObject>();
+            //    switch (thisAntHandler.myLineIndex)
+            //    {
+            //        case 0: activeLine = lineList1; break;
+            //        case 1: activeLine = lineList2; break;
+            //        case 2: activeLine = lineList3; break;
+            //        case 3: activeLine = lineList4; break;
+            //        case 4: activeLine = lineList5; break;
+            //    }
+            //    if (activeLine.Any() && activeLine[0] == ant)// If the ant is on the first spot in the list but is too far away, remove it from the list.
+            //    {
+            //        //activeLine[0] = null;
+            //        RemoveAntFromList(ant, thisAntHandler.myLineIndex);
+            //        EmptyAntLine(thisAntHandler.myLineIndex);
+            //        thisAntHandler.DestroyLineData();
+            //        thisAntHandler.SetInLine(false);
+            //    }
+
+            //}
+
+        }
+
+        for (int i = 0; i < 5; i++)
+        { //each fucking list
+            List<GameObject> activeLine = new List<GameObject>();
+
+            switch (i)
             {
-                List<GameObject> activeLine = new List<GameObject>();
-                switch (thisAntHandler.myLineIndex)
+                case 0: activeLine = lineList1; break;
+                case 1: activeLine = lineList2; break;
+                case 2: activeLine = lineList3; break;
+                case 3: activeLine = lineList4; break;
+                case 4: activeLine = lineList5; break;
+            }
+            if (activeLine.Any())
+            {
+                GameObject firstAntInLine = activeLine[0];
+                ThisAntHandler thisAntHandler = firstAntInLine.GetComponent<ThisAntHandler>();
+
+                float distance = Vector3.Distance(transform.position, firstAntInLine.transform.position);
+                if (distance >= maxHoleDistance)
                 {
-                    case 0: activeLine = lineList1; break;
-                    case 1: activeLine = lineList2; break;
-                    case 2: activeLine = lineList3; break;
-                    case 3: activeLine = lineList4; break;
-                    case 4: activeLine = lineList5; break;
-                }
-                if (activeLine.Any() && activeLine[0] == ant)// If the ant is on the first spot in the list but is too far away, remove it from the list.
-                {
-                    //activeLine[0] = null;
-                    RemoveAntFromList(ant, thisAntHandler.myLineIndex);
-                    EmptyAntLine(thisAntHandler.myLineIndex);
+                    RemoveAntFromList(firstAntInLine, i);
+                    for (int j = 0; j < 5; j++)
+                    {
+                        EmptyAntLine(j);
+                    }
                     thisAntHandler.DestroyLineData();
                     thisAntHandler.SetInLine(false);
                 }
-
             }
-
         }
     }
 
@@ -112,34 +147,38 @@ public class AntManager : MonoBehaviour
     List<Transform> lineLocations;
 
     [SerializeField] private LineController lineController;
-    private void UpdateAntLineRenderer(int lineIndex)
+    private void UpdateAntLineRenderer()
     {
-        lineLocations = new List<Transform>();  // Makes the list new and empty
-        lineLocations.Clear();
-        List<GameObject> activeLine = new List<GameObject>();
-        switch (lineIndex)
+        for (int lineIndexx = 0; lineIndexx < 4; lineIndexx++)
         {
-            case 0: activeLine = lineList1; break;
-            case 1: activeLine = lineList2; break;
-            case 2: activeLine = lineList3; break;
-            case 3: activeLine = lineList4; break;
-            case 4: activeLine = lineList5; break;
+            //For each list, Make a list thats new and empty
+            lineLocations = new List<Transform>();  // Makes the list new and empty
+            lineLocations.Clear();
+            List<GameObject> activeLine = new List<GameObject>();
+            lineIndexx = 1;
+            switch (lineIndexx)
+            {
+                case 0: activeLine = lineList1; break;
+                case 1: activeLine = lineList2; break;
+                case 2: activeLine = lineList3; break;
+                case 3: activeLine = lineList4; break;
+                case 4: activeLine = lineList5; break;
+            }
+            foreach (GameObject ant in activeLine)  //Fill the list with the ants in the line.
+            {
+                lineLocations.Add(ant.transform);
+            }
+            SendPointsToLineRenderer(lineLocations, 1);//Send the list to be drawn.
         }
-        int i = 0;
-        foreach (GameObject ant in activeLine)
-        {
-            lineLocations.Add(ant.transform);
-        }
+
+
     }
 
-    private void SendPointsToLineRenderer(List<Transform> list)
+    private void SendPointsToLineRenderer(List<Transform> list, int index)
     {
         if (lineController != null)
         {
-            // Convert List<Transform> to Transform[]
-            Transform[] pointsArray = list.ToArray();
-
-            lineController.SetUpLine(pointsArray);
+            lineController.SetUpLine(list, index);
         }
     }
     #endregion
@@ -154,7 +193,7 @@ public class AntManager : MonoBehaviour
             case 3: activeLine = lineList4; break;
             case 4: activeLine = lineList5; break;
         }
-        if (activeLine.Count > 0)
+        if (activeLine.Count > 0) //if smth in this line
         {
             foreach (GameObject ant in activeLine)
             {
@@ -223,10 +262,10 @@ public class AntManager : MonoBehaviour
                 case 3: activeLine = lineList4; break;
                 case 4: activeLine = lineList5; break;
             }
-            if (!activeLine.Any())// || allLines[i] == null)
+            if (!activeLine.Any())// || allLines[i] == null) //if my line has nothing in it..
             {
                 //Debug.Log("All lines with index " + i + "is empty");
-                allLines[i] = new List<GameObject>();
+                allLines[i] = new List<GameObject>();   //new list
                 //List<GameObject> currentLine = allLines[i];
                 thisAntHandler.ReceiveLineIndex(i);
                 //Debug.Log("Created a new Line List");
@@ -268,7 +307,7 @@ public class AntManager : MonoBehaviour
 
     public void EmptyAntLine(int index)
     {
-        Debug.Log("Attempting to clear the array n " + index);
+        //Debug.Log("Attempting to clear the array n " + index);
         MakeAllAntsForgetLists(index);
         //allLines[index] = null;
         switch (index)
@@ -451,6 +490,46 @@ public class AntManager : MonoBehaviour
                 activeLine.RemoveAt(i);
             }
         }
+    }
+
+    #endregion
+
+    #region drawDebugLines
+    public Color rayColor = Color.green;
+
+    private void DrawDebugLines()
+    {
+        int listIndex = 0;
+        List<GameObject> activeLine = new List<GameObject>();// Active LineList
+        for (int ii = 0; ii <= 4; ii++)
+        {
+            //Debug.Log(ii);
+            switch (ii)
+            {
+                case 0: activeLine = lineList1; break;
+                case 1: activeLine = lineList2; break;
+                case 2: activeLine = lineList3; break;
+                case 3: activeLine = lineList4; break;
+                case 4: activeLine = lineList5; break;  //FOR EACH LINE
+            }
+
+            if (activeLine.Any())   //If smth in list
+            {
+                for (int i = 0; i < activeLine.Count - 1; i++)  //For each item in the list.
+                {
+                    //Debug.Log("I = " + i + " and the lineCount = " + activeLine.Count);
+                    int j = Mathf.Min(i + 1, activeLine.Count - 1);
+                    //Debug.Log(" j =  " + j + " And the list has " + activeLine.Count + " ants");
+                    if (activeLine[i] != null && activeLine[j] != null) //if i and j exist.
+                    {
+                        //Draw a line between i and J.
+                        Debug.DrawLine(activeLine[i].transform.position, activeLine[j].transform.position, rayColor);
+                    }
+
+                }
+            }
+        }
+
     }
 
     #endregion

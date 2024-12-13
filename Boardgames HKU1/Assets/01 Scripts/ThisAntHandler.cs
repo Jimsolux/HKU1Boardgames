@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -37,7 +36,7 @@ public class ThisAntHandler : MonoBehaviour
         maxDistance = activeAntManager.maxAntDistance;
         relevantPositionIndex = relevantIndex;
         antThatPutMeInLine = parentAnt;
-        Debug.Log("NEW LINEDATA RECEIVED");
+        //Debug.Log("NEW LINEDATA RECEIVED");
         colorthing = GetComponentInChildren<ChangeSelectColour>();
         colorthing.ChangeInLineColor(true);
     }
@@ -54,7 +53,7 @@ public class ThisAntHandler : MonoBehaviour
         myLineIndex = -1;
         relevantPositionIndex = -1;
         antThatPutMeInLine = null;
-        Debug.Log("OLD LINEDATA REMOVED");
+        //Debug.Log("OLD LINEDATA REMOVED");
         colorthing = GetComponentInChildren<ChangeSelectColour>();
         colorthing.ChangeInLineColor(false);
     }
@@ -110,13 +109,15 @@ public class ThisAntHandler : MonoBehaviour
                 {
                     float distance = Vector3.Distance(transform.position, ant.transform.position);
 
-                    if (distance < maxDistance && !activeLine.Contains(ant))    // Other ant not yet in list
+                    if (distance < maxDistance && !activeLine.Contains(ant))    // Other ant not yet in my list
                     {
                         //Debug.Log("Ant recognized as being close enough to add to line!");
                         ThisAntHandler otherAntHandler = ant.GetComponent<ThisAntHandler>();
+
                         otherAntHandler.AddAntToList(ant, listIndex);
                         otherAntHandler.ReceiveLineData(activeAntManager, relevantPositionIndex + 1, this.gameObject);
                         otherAntHandler.ReceiveLineIndex(listIndex);
+
                         //Debug.Log("Found Distance is " + distance);
                     }
 
@@ -161,10 +162,10 @@ public class ThisAntHandler : MonoBehaviour
     [SerializeField] private GameObject foodIcon;
     public void GrabFood()
     {
-        Debug.Log("I am tasked to grab food.");
-        if (hasFoodNearby && activeContainer != null)   
+        //Debug.Log("I am tasked to grab food.");
+        if (hasFoodNearby && activeContainer != null)
         {
-            Debug.Log("I have a foodcontainer nearby.");
+            //Debug.Log("I have a foodcontainer nearby.");
 
             if (activeContainer.foodAmount >= 1)
             {
@@ -178,7 +179,7 @@ public class ThisAntHandler : MonoBehaviour
             {
                 activeContainer.gameObject.SetActive(false);
             }
-            
+
         }
 
 
@@ -192,14 +193,14 @@ public class ThisAntHandler : MonoBehaviour
 
     public void GiveFoodToPreviousInLine()
     {
-        if(hasFood && antThatPutMeInLine != null)
+        if (hasFood && antThatPutMeInLine != null)
         {
-            if(antThatPutMeInLine.tag == "Hole")
+            if (antThatPutMeInLine.tag == "Hole")
             {
                 Resources resources = antThatPutMeInLine.GetComponent<Resources>();
                 resources.GainFood(1);
                 hasFood = false;
-                DisplayFoodIcon(); 
+                DisplayFoodIcon();
                 return;
             }
             //Give the food to the previous Ant in line.

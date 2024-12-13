@@ -31,13 +31,17 @@ public class AntMovement : MonoBehaviour
     #region control the ants and shit
     private void ControlAnts()
     {
-        if (selectedAnt == null)// if no selected ant
+        if (selectedAnt == null || selectedAnt)// if no selected ant
         {
             Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);//raycast 
             if (Physics.Raycast(ray, out RaycastHit hit, 100, creatureMask))
             {
                 if (hit.collider.gameObject.tag == "Ant" || hit.collider.gameObject.tag == "OtherAnt")   //if ant, get the ant
                 {
+                    if (selectedAnt)//if i already have an ant, deselect it.
+                    {
+                        DeselectAnts();
+                    }
                     GetAnt(hit.collider.gameObject);
                     //Set ant to selected
                     changeSelectColor.ChangeToSelectedColor();
@@ -47,11 +51,15 @@ public class AntMovement : MonoBehaviour
                 }
                 if (hit.collider.gameObject.tag == "Map")
                 {
-                    //DeselectAnts(); 
+                    DeselectAnts(); 
                     //Debug.Log("Deselected Ant because ray saw " + hit.collider.gameObject.name);
                 }
                 if (hit.collider.gameObject.tag == "AreaChecker")
                 {
+                    if (selectedAnt)//if i already have an ant, deselect it.
+                    {
+                        DeselectAnts();
+                    }
                     GetAnt(hit.transform.parent.gameObject);
                 }
             }
@@ -103,7 +111,7 @@ public class AntMovement : MonoBehaviour
         {
             //antAgent.ResetPath();
             antAgent.destination = hit.point;
-            DeselectAnts();
+            //DeselectAnts();
         }
     }
     #endregion

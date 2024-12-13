@@ -10,6 +10,7 @@ public class SpawnAnts : MonoBehaviour
 
     //Reference to resources
     private Resources resources;
+    [SerializeField] private AudioSource spawnAudio;
 
     private void Awake()
     {
@@ -29,15 +30,19 @@ public class SpawnAnts : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Alpha2))//Warrior
         {
-            CreateNewEgg(antTypeEnum.warrior);
+            CreateNewEgg(antTypeEnum.collector);
         }
         if (Input.GetKeyDown(KeyCode.Alpha3))//Flying
         {
-            CreateNewEgg(antTypeEnum.scout);
+            CreateNewEgg(antTypeEnum.collector);
         }
     }
 
+    public void ButtonSpawnEgg()
+    {
+        CreateNewEgg(antTypeEnum.collector);
 
+    }
     #region create new ants
 
     [SerializeField] private GameObject antEgg;
@@ -57,6 +62,9 @@ public class SpawnAnts : MonoBehaviour
 
     private void CreateNewEgg(antTypeEnum typeAnt)
     {
+        //audio
+        spawnAudio.Play();
+        //rest
         int cost = 0;
         GameObject theAnt = null;
         switch (typeAnt)
@@ -64,7 +72,7 @@ public class SpawnAnts : MonoBehaviour
             case antTypeEnum.collector:
                 theAnt = collectorAnt;
                 //Debug.Log("TheAnt has been set.");
-                cost = 3;
+                cost = 1;
                 break;
             case antTypeEnum.warrior:
                 theAnt = warriorAnt;

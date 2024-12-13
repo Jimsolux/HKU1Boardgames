@@ -10,12 +10,13 @@ Material:
   m_Name: SandHillTexture Variant
   m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
   m_Parent: {fileID: 5561349426305759274, guid: deff5a47dc3624c4e819ba3090cca27a, type: 3}
-  m_ModifiedSerializedProperties: 0
+  m_ModifiedSerializedProperties: 2
   m_ValidKeywords:
+  - _EMISSION
   - _NORMALMAP
   - _PARALLAXMAP
   m_InvalidKeywords: []
-  m_LightmapFlags: 4
+  m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
@@ -51,5 +52,6 @@ Material:
     - _Metallic: 0
     - _OcclusionStrength: 1
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0, g: 0.990566, b: 0.15305947, a: 1}
+    - _EmissionColor: {r: 0.026210386, g: 0.02793303, b: 0.2924528, a: 1}
   m_BuildTextureStacks: []

@@ -1,9 +1,13 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+using static UnityEditor.PlayerSettings;
 
 public class SpiderBehaviour : MonoBehaviour
 {
+    LineController lineController;
     public NavMeshAgent myAgent;
     public Transform myHole;
     public GameObject targetAnt = null;
@@ -11,6 +15,7 @@ public class SpiderBehaviour : MonoBehaviour
     [SerializeField] GameObject fakeAnt;
     [SerializeField] Transform fangPositionForAnt;
     GameObject currentFakeAnt = null;
+    AudioSource biteAudio;
     public enum SpiderStatesEnum
     {
         Roaming,
@@ -24,6 +29,9 @@ public class SpiderBehaviour : MonoBehaviour
     {
         myAgent = GetComponent<NavMeshAgent>();
         activestate = SpiderStatesEnum.Roaming;
+        AddObjectLocationsToPatrolSpots();
+        lineController = GameObject.Find("LineDrawer").GetComponent<LineController>();
+        biteAudio = GetComponent<AudioSource>();
     }
 
     private void FixedUpdate()
@@ -50,17 +58,37 @@ public class SpiderBehaviour : MonoBehaviour
     #region behaviour
 
     bool hasDestination = false;
+    int currentPatrolIndex = 0;
 
     private void RoamingBehaviour()
     {
-        //Roam, pick random points in a range of distances, randomly around me.
-        float maxRange = 10;
-        float minRange = 1;
-
-        if (!hasDestination && !hasTarget)
+        if (IHavePatrolSpots()) //PatrolBehaviour
         {
-            StartCoroutine(GoToRoamSpot(minRange, maxRange));
+            //Move to the first patrol spot. When arrived, move to the second patrol spot etc.
+            Vector3 targetPos = patrolSpots[currentPatrolIndex];
+            //Move to the tagetPos.
+            myAgent.SetDestination(targetPos);
+            
+            if (Vector3.Distance(transform.position, targetPos) < 1 )
+            {
+                currentPatrolIndex++;
+            }
+            if(currentPatrolIndex > patrolSpots.Count -1) currentPatrolIndex = 0;//if max, reset
+
+
         }
+        else    //Roaming Behaviour
+        {
+            //Roam, pick random points in a range of distances, randomly around me.
+            float maxRange = 10;
+            float minRange = 1;
+
+            if (!hasDestination && !hasTarget && !roaming)
+            {
+                StartCoroutine(GoToRoamSpot(minRange, maxRange));
+            }
+        }
+
 
         if (hasTarget && targetLoc != transform.position)//Target?
         {
@@ -68,6 +96,29 @@ public class SpiderBehaviour : MonoBehaviour
         }
     }
 
+
+    #region patrolling
+    [SerializeField] List<Vector3> patrolSpots = new List<Vector3>();
+    [SerializeField] List<GameObject> patrolObjects = new List<GameObject>();
+
+
+    private bool IHavePatrolSpots()
+    {
+        if (patrolSpots.Any())
+        {
+            return true;
+        }
+        else { return false; }
+    }
+
+    private void AddObjectLocationsToPatrolSpots()
+    {
+        foreach (GameObject obj in patrolObjects) {
+            patrolSpots.Add(obj.GetComponent<Transform>().position);
+        }
+    }
+
+    #endregion
     private void AttackingBehaviour()
     {
             targetLoc = targetAnt.transform.position;
@@ -78,17 +129,22 @@ public class SpiderBehaviour : MonoBehaviour
                 myAgent.SetDestination(targetLoc);
             }
 
-            if (Vector3.Distance(transform.position, targetLoc) < 1f)
+            if (Vector3.Distance(transform.position, targetLoc) < 1.3f)
             {
                 Debug.Log("Ant is hella close to me imma eat");
                 //Incapacitate ant
                 if (targetAnt != null)
                 {
-                    //Re gets target position
-                        //GetTarget(targetAnt); mehhhh
-
+                    biteAudio.Play();
                     caughtAnt = targetAnt;
                     //Disables caughtAnt
+                    //Removes the line that the ant was in.
+                    ThisAntHandler caughtAntHandler = caughtAnt.GetComponent<ThisAntHandler>();
+                    if (caughtAntHandler.myLineIndex != -1)
+                    {
+                        caughtAntHandler.activeAntManager.EmptyAntLine(caughtAntHandler.myLineIndex);//Empty the current Ant line the ant is in.
+                        lineController.ClearList(caughtAntHandler.myLineIndex);//Clear the Line controllers list of this ant.
+                    }
                     caughtAnt.SetActive(false);
                     targetAnt = null;
                     caughtAnt = null;
@@ -106,14 +162,14 @@ public class SpiderBehaviour : MonoBehaviour
 
     private void DraggingBehaviour()
     {
-        if(Vector3.Distance(transform.position, myHole.position) > 0.5f)
+        if(Vector3.Distance(transform.position, myHole.position) > 1f)
         {
             if(myAgent.destination != myHole.position)
             {
                 myAgent.SetDestination(myHole.position);
             }
         }
-        else if (Vector3.Distance(transform.position, myHole.position) < 0.4f)
+        else if (Vector3.Distance(transform.position, myHole.position) < 1f)
         {
             //Destroy fakeAnt
             Destroy(currentFakeAnt);
@@ -141,11 +197,12 @@ public class SpiderBehaviour : MonoBehaviour
         return targetdir;
     }
 
+    bool roaming;
     private IEnumerator GoToRoamSpot(float min, float max)
     {
         while (true)
         {
-
+            roaming = true;
             Vector3 pos = PickRandomDirection(min, max);
 
             if (Vector3.Distance(transform.position, transform.position + pos) > 0.5f)
@@ -162,6 +219,7 @@ public class SpiderBehaviour : MonoBehaviour
 
             if (hasTarget)
             {
+                roaming = false;
                 yield break;
             }
 
@@ -174,9 +232,12 @@ public class SpiderBehaviour : MonoBehaviour
     Vector3 targetLoc;
     public void GetTarget(GameObject target)
     {
-        hasTarget = true;
-        targetLoc = target.transform.position;
-        targetAnt = target;
+        if (!hasTarget)
+        {
+            hasTarget = true;
+            targetLoc = target.transform.position;
+            targetAnt = target;
+        }
     }
 
     public void RemoveTarget()
